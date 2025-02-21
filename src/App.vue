@@ -1,10 +1,10 @@
 <template>
-  <nav>
+  <!-- <nav>
     <router-link to="/">Para você</router-link> |
     <router-link to="/about">A empresta</router-link> |
     <router-link to="/about">Ajuda</router-link> |
     <router-link to="/about">Sustentabilidade</router-link>
-  </nav>
+  </nav> -->
   <router-view />
 </template>
 

@@ -2,12 +2,16 @@ import axios from "axios";
 import loanAdapter from "@/core/adapters/loanAdapter";
 import { Institution, Agreement } from "@/domain/models/loanModel";
 
-const BASE_API_URL = "http://127.0.0.1:8000";
+const BASE_API_URL = "http://127.0.0.1:8000/api";
+
+const api = axios.create({
+  baseURL: BASE_API_URL,
+});
 
 const loanRepository = {
   async getInstitutions() {
     try {
-      const response = await axios.get(`${BASE_API_URL}/instituicao`);
+      const response = await api.get("/instituicao");
       return response.data.map(
         (institution, index) =>
           new Institution(index + 1, institution.chave, institution.valor)
@@ -20,7 +24,7 @@ const loanRepository = {
 
   async getAgreements() {
     try {
-      const response = await axios.get(`${BASE_API_URL}/convenio`);
+      const response = await api.get("/convenio");
       return response.data.map(
         (agreement, index) =>
           new Agreement(index + 1, agreement.chave, agreement.valor)
@@ -34,13 +38,13 @@ const loanRepository = {
   async simulationRequest(value, institutions, agreements, installments) {
     try {
       const payload = {
-        valor_emprestimo: value,
+        valor_emprestimo: parseFloat(value),
         instituicoes: institutions,
         convenios: agreements,
-        parcelas: installments,
+        parcelas: parseInt(installments) || 0,
       };
 
-      const response = await axios.post(`${BASE_API_URL}/simular`, payload);
+      const response = await api.post("/simular", payload);
       return loanAdapter.getOffersFromJson(response.data, value);
     } catch (error) {
       console.error("Erro na simulação de empréstimo:", error);

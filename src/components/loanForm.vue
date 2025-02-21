@@ -1,10 +1,10 @@
 <template>
   <div class="container">
     <div class="form-container">
-      <h2>Simulação de Empréstimo</h2>
+      <h2 class="title">Simulação de empréstimo</h2>
       <form @submit.prevent="submitForm">
         <div class="form-group">
-          <label>Valor do Empréstimo</label>
+          <label>Valor do empréstimo</label>
           <input
             v-model="loanValue"
             type="text"
@@ -14,54 +14,166 @@
         </div>
 
         <div class="form-group">
+          <label>Quantidade de parcelas</label>
+          <div class="dropdown">
+            <input
+              type="text"
+              readonly
+              :value="installmentValue ? installmentValue + ' parcelas' : ''"
+              @click="toggleInstallmentsDropdown"
+            />
+            <span class="dropdown-icon" @click="toggleInstallmentsDropdown">
+              <svg
+                v-if="showInstallmentsDropdown"
+                xmlns="http://www.w3.org/2000/svg"
+                width="16"
+                height="16"
+                viewBox="0 0 24 24"
+              >
+                <path d="M7 14l5-5 5 5z" />
+              </svg>
+              <svg
+                v-else
+                xmlns="http://www.w3.org/2000/svg"
+                width="16"
+                height="16"
+                viewBox="0 0 24 24"
+              >
+                <path d="M7 10l5 5 5-5z" />
+              </svg>
+            </span>
+            <div v-if="showInstallmentsDropdown" class="dropdown-content">
+              <label
+                v-for="installment in availableInstallments"
+                :key="installment"
+                @click="selectInstallment(installment)"
+              >
+                <span>{{ installment }} parcelas</span>
+              </label>
+            </div>
+          </div>
+        </div>
+
+        <div class="form-group">
           <label>Instituições</label>
-          <select v-model="selectedInstitutions" multiple>
-            <option
-              v-for="institution in loanStore.getInstitutions()"
-              :key="institution.id"
-              :value="institution.id"
-            >
-              {{ institution.name }}
-            </option>
-          </select>
+          <div class="dropdown">
+            <input
+              type="text"
+              readonly
+              :value="selectedInstitutionsNames.join(', ')"
+              @click="toggleInstitutionsDropdown"
+            />
+            <span class="dropdown-icon" @click="toggleInstitutionsDropdown">
+              <svg
+                v-if="showInstitutionsDropdown"
+                xmlns="http://www.w3.org/2000/svg"
+                width="16"
+                height="16"
+                viewBox="0 0 24 24"
+              >
+                <path d="M7 14l5-5 5 5z" />
+              </svg>
+              <svg
+                v-else
+                xmlns="http://www.w3.org/2000/svg"
+                width="16"
+                height="16"
+                viewBox="0 0 24 24"
+              >
+                <path d="M7 10l5 5 5-5z" />
+              </svg>
+            </span>
+            <div v-if="showInstitutionsDropdown" class="dropdown-content">
+              <label v-for="institution in institutions" :key="institution.id">
+                <span>{{ institution.name }}</span>
+                <input
+                  class="dropdown-content-checkbox"
+                  type="checkbox"
+                  :value="institution.id"
+                  v-model="selectedInstitutions"
+                />
+              </label>
+            </div>
+          </div>
         </div>
 
         <div class="form-group">
           <label>Convênios</label>
-          <select v-model="selectedAgreements" multiple>
-            <option
-              v-for="agreement in loanStore.getAgreements()"
-              :key="agreement.id"
-              :value="agreement.id"
-            >
-              {{ agreement.name }}
-            </option>
-          </select>
+          <div class="dropdown">
+            <input
+              type="text"
+              readonly
+              :value="selectedAgreementsNames.join(', ')"
+              @click="toggleAgreementsDropdown"
+            />
+            <span class="dropdown-icon" @click="toggleAgreementsDropdown">
+              <svg
+                v-if="showAgreementsDropdown"
+                xmlns="http://www.w3.org/2000/svg"
+                width="16"
+                height="16"
+                viewBox="0 0 24 24"
+              >
+                <path d="M7 14l5-5 5 5z" />
+              </svg>
+              <svg
+                v-else
+                xmlns="http://www.w3.org/2000/svg"
+                width="16"
+                height="16"
+                viewBox="0 0 24 24"
+              >
+                <path d="M7 10l5 5 5-5z" />
+              </svg>
+            </span>
+            <div v-if="showAgreementsDropdown" class="dropdown-content">
+              <label v-for="agreement in agreements" :key="agreement.id">
+                <span class="dropdown-content-span">{{ agreement.name }}</span>
+                <input
+                  class="dropdown-content-checkbox"
+                  type="checkbox"
+                  :value="agreement.id"
+                  v-model="selectedAgreements"
+                />
+              </label>
+            </div>
+          </div>
         </div>
 
-        <div class="form-group">
-          <label>Quantidade de parcelas</label>
-          <select v-model="installmentValue">
-            <option
-              v-for="installment in availableInstallments"
-              :key="installment"
-            >
-              {{ installment }}
-            </option>
-          </select>
-        </div>
-
-        <button type="submit">Simular</button>
+        <button type="submit">SIMULAR</button>
       </form>
     </div>
 
     <div class="offers-container">
-      <h2>Ofertas de Empréstimo</h2>
+      <h2>Ofertas de empréstimo</h2>
       <div class="offers-list">
         <div v-for="offer in offers" :key="offer.id" class="offer-card">
-          <p><strong>Instituição:</strong> {{ offer.institution }}</p>
-          <p><strong>Valor:</strong> {{ offer.amount }}</p>
-          <p><strong>Parcelas:</strong> {{ offer.installments }}</p>
+          <img :src="bankImage(offer.bank)" alt="Banco" class="bank-logo" />
+          <div class="offer-details">
+            <p>Valor solicitado</p>
+            <p>
+              <strong>
+                R$
+                {{
+                  parseFloat(offer.simulatedAmount).toFixed(2).replace(".", ",")
+                }}
+              </strong>
+            </p>
+          </div>
+          <div class="offer-details">
+            <p>Parcelas</p>
+            <strong>
+              <p>{{ offer.installments }}x R$ {{ offer.installmentAmount }}</p>
+            </strong>
+          </div>
+          <div class="offer-details">
+            <p>Convênio</p>
+            <strong>
+              <p>
+                {{ offer.bank }} ({{ offer.agreement }}) - {{ offer.rate }}%
+              </p>
+            </strong>
+          </div>
         </div>
       </div>
     </div>
@@ -73,18 +185,57 @@ import { ref, computed, onMounted } from "vue";
 import { useLoanStore } from "@/store/loanStore";
 
 export default {
+  methods: {
+    bankImage(bankName) {
+      return `/images/${bankName.toLowerCase()}.png`;
+    },
+  },
   setup() {
     const loanStore = useLoanStore();
-
     const loanValue = ref("");
     const selectedInstitutions = ref([]);
     const selectedAgreements = ref([]);
     const installmentValue = ref("");
-    const availableInstallments = [36, 48, 60, 72, 84];
+    const availableInstallments = [0, 36, 48, 60, 72, 84];
 
     const institutions = computed(() => loanStore.institutions);
     const agreements = computed(() => loanStore.agreements);
     const offers = computed(() => loanStore.offers);
+
+    const showInstallmentsDropdown = ref(false);
+    const showInstitutionsDropdown = ref(false);
+    const showAgreementsDropdown = ref(false);
+
+    const toggleInstallmentsDropdown = () => {
+      showInstallmentsDropdown.value = !showInstallmentsDropdown.value;
+    };
+
+    const toggleInstitutionsDropdown = () => {
+      showInstitutionsDropdown.value = !showInstitutionsDropdown.value;
+    };
+
+    const toggleAgreementsDropdown = () => {
+      showAgreementsDropdown.value = !showAgreementsDropdown.value;
+    };
+
+    const selectInstallment = (installment) => {
+      installmentValue.value = installment;
+      showInstallmentsDropdown.value = false;
+    };
+
+    const selectedInstitutionsNames = computed(() => {
+      return institutions.value
+        .filter((institution) =>
+          selectedInstitutions.value.includes(institution.id)
+        )
+        .map((institution) => institution.name);
+    });
+
+    const selectedAgreementsNames = computed(() => {
+      return agreements.value
+        .filter((agreement) => selectedAgreements.value.includes(agreement.id))
+        .map((agreement) => agreement.name);
+    });
 
     onMounted(() => {
       loanStore.fetchInstitutions();
@@ -101,10 +252,20 @@ export default {
     };
 
     const submitForm = () => {
+      const institutionsSelected = institutions.value
+        .filter((institution) =>
+          selectedInstitutions.value.includes(institution.id)
+        )
+        .map((institution) => institution.name);
+
+      const agreementsSelected = agreements.value
+        .filter((agreement) => selectedAgreements.value.includes(agreement.id))
+        .map((agreement) => agreement.name);
+
       loanStore.fetchLoanOffers(
         parseFloat(loanValue.value.replace("R$", "").replace(",", ".")),
-        selectedInstitutions.value,
-        selectedAgreements.value,
+        institutionsSelected,
+        agreementsSelected,
         installmentValue.value
       );
     };
@@ -119,8 +280,17 @@ export default {
       institutions,
       agreements,
       offers,
+      showInstallmentsDropdown,
+      showInstitutionsDropdown,
+      showAgreementsDropdown,
+      toggleInstallmentsDropdown,
+      toggleInstitutionsDropdown,
+      toggleAgreementsDropdown,
       formatCurrency,
       submitForm,
+      selectInstallment,
+      selectedInstitutionsNames,
+      selectedAgreementsNames,
     };
   },
 };
@@ -129,27 +299,63 @@ export default {
 <style scoped>
 .container {
   display: flex;
-  gap: 20px;
+  justify-content: center;
+  align-items: start;
   padding: 20px;
+  gap: 20px;
 }
 
 .form-container {
   flex: 1;
-  background-color: #fff;
+  background-color: antiquewhite;
+  color: black;
   padding: 20px;
   border-radius: 10px;
-  box-shadow: 0px 0px 10px rgba(0, 0, 0, 0.1);
-  max-width: 400px;
+  width: 100%;
+  max-width: 450px;
+  box-shadow: 0px 4px 6px rgba(0, 0, 0, 0.1);
+}
+
+.form-group {
+  margin-bottom: 20px;
+  display: flex;
+  flex-direction: column;
+}
+
+.form-group input {
+  color: orange;
+}
+
+.offer-card {
+  background-color: white;
+  color: orange;
+  padding: 10px;
+  border-radius: 5px;
+  margin-top: 10px;
+  box-shadow: 0px 2px 4px rgba(0, 0, 0, 0.1);
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.bank-logo {
+  width: 60px;
+  height: 60px;
+  object-fit: fill;
+}
+
+.offer-details {
+  flex: 1;
 }
 
 .offers-container {
-  flex: 2;
-  background-color: #fff;
+  flex: 1;
+  height: 450px;
+  background-color: antiquewhite;
   padding: 20px;
   border-radius: 10px;
   box-shadow: 0px 0px 10px rgba(0, 0, 0, 0.1);
   overflow-y: auto;
-  max-height: 500px;
 }
 
 .offers-list {
@@ -158,24 +364,99 @@ export default {
   gap: 10px;
 }
 
-.offer-card {
-  background-color: #ff6600;
-  color: white;
-  padding: 10px;
-  border-radius: 5px;
-}
-
 button {
   width: 100%;
-  padding: 10px;
-  background-color: #ff6600;
+  padding: 12px;
+  background-color: orange;
   color: white;
+  font-weight: bold;
   border: none;
   border-radius: 5px;
   cursor: pointer;
 }
 
 button:hover {
-  background-color: #cc5500;
+  background-color: orange;
+}
+
+h2.title {
+  color: black;
+  text-align: center;
+}
+
+label {
+  color: orange;
+  font-weight: bold;
+  margin-bottom: 5px;
+  cursor: pointer;
+}
+
+input,
+select {
+  width: 100%;
+  padding: 12px;
+  border: 1px solid antiquewhite;
+  border-radius: 5px;
+  background: white;
+  box-sizing: border-box;
+}
+
+form {
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+}
+
+.dropdown {
+  position: relative;
+  width: 100%;
+}
+
+.dropdown input {
+  cursor: pointer;
+}
+
+.dropdown-icon {
+  position: absolute;
+  top: 50%;
+  right: 10px;
+  transform: translateY(-50%);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+}
+
+.dropdown-content {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  width: 100%;
+  background: white;
+  border: 1px solid antiquewhite;
+  border-radius: 5px;
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+  z-index: 10;
+  max-height: 200px;
+  overflow-y: auto;
+}
+
+.dropdown-content label {
+  display: flex;
+  padding: 8px 12px;
+  cursor: pointer;
+}
+
+.dropdown-content label:hover {
+  background-color: antiquewhite;
+}
+
+.dropdown-content label span {
+  flex-grow: 1;
+  text-align: left;
+  color: orange;
+}
+
+.dropdown-content-checkbox {
+  width: auto;
 }
 </style>
