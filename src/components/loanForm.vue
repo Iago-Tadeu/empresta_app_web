@@ -11,6 +11,7 @@
             @input="formatCurrency"
             required
           />
+          <p v-if="errorMessage" class="error-message">{{ errorMessage }}</p>
         </div>
 
         <div class="form-group">
@@ -19,7 +20,13 @@
             <input
               type="text"
               readonly
-              :value="installmentValue ? installmentValue + ' parcelas' : ''"
+              :value="
+                installmentValue === 0
+                  ? 'Sem parcelamento'
+                  : installmentValue
+                  ? installmentValue + ' parcelas'
+                  : ''
+              "
               @click="toggleInstallmentsDropdown"
             />
             <span class="dropdown-icon" @click="toggleInstallmentsDropdown">
@@ -48,7 +55,11 @@
                 :key="installment"
                 @click="selectInstallment(installment)"
               >
-                <span>{{ installment }} parcelas</span>
+                <span>{{
+                  installment === 0
+                    ? "Sem parcelamento"
+                    : installment + " parcelas"
+                }}</span>
               </label>
             </div>
           </div>
@@ -146,7 +157,12 @@
 
     <div class="offers-container">
       <h2>Ofertas de empréstimo</h2>
-      <div class="offers-list">
+
+      <div v-if="offers.length === 0" class="no-offers">
+        <p>Insira os dados ao lado para ver as ofertas de empréstimo!</p>
+      </div>
+
+      <div v-else class="offers-list">
         <div v-for="offer in offers" :key="offer.id" class="offer-card">
           <img :src="bankImage(offer.bank)" alt="Banco" class="bank-logo" />
           <div class="offer-details">
@@ -193,6 +209,7 @@ export default {
   setup() {
     const loanStore = useLoanStore();
     const loanValue = ref("");
+    const errorMessage = ref("");
     const selectedInstitutions = ref([]);
     const selectedAgreements = ref([]);
     const installmentValue = ref("");
@@ -249,9 +266,29 @@ export default {
         currency: "BRL",
       });
       loanValue.value = value;
+      validateLoanValue();
+    };
+
+    const validateLoanValue = () => {
+      const numericValue = parseFloat(
+        loanValue.value.replace("R$", "").replace(",", ".")
+      );
+
+      if (!loanValue.value.trim()) {
+        errorMessage.value =
+          "Por favor, insira um valor para simular o empréstimo.";
+      } else if (isNaN(numericValue) || numericValue <= 0) {
+        errorMessage.value = "O valor do empréstimo deve ser maior que zero.";
+      } else {
+        errorMessage.value = "";
+      }
     };
 
     const submitForm = () => {
+      validateLoanValue();
+
+      if (errorMessage.value) return;
+
       const institutionsSelected = institutions.value
         .filter((institution) =>
           selectedInstitutions.value.includes(institution.id)
@@ -273,6 +310,7 @@ export default {
     return {
       loanStore,
       loanValue,
+      errorMessage,
       selectedInstitutions,
       selectedAgreements,
       installmentValue,
@@ -305,6 +343,12 @@ export default {
   gap: 20px;
 }
 
+form {
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+}
+
 .form-container {
   flex: 1;
   background-color: antiquewhite;
@@ -326,6 +370,12 @@ export default {
   color: orange;
 }
 
+.bank-logo {
+  width: 60px;
+  height: 60px;
+  object-fit: contain;
+}
+
 .offer-card {
   background-color: white;
   color: orange;
@@ -336,16 +386,23 @@ export default {
   display: flex;
   align-items: center;
   gap: 10px;
-}
-
-.bank-logo {
-  width: 60px;
-  height: 60px;
-  object-fit: fill;
+  flex-wrap: wrap;
+  min-width: 250px;
+  max-width: 100%;
 }
 
 .offer-details {
   flex: 1;
+  min-width: 120px;
+  max-width: 100%;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.offer-details p {
+  margin: 0;
+  font-size: 14px;
 }
 
 .offers-container {
@@ -362,6 +419,17 @@ export default {
   display: flex;
   flex-direction: column;
   gap: 10px;
+}
+
+.no-offers {
+  flex: 1;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  text-align: center;
+  font-size: 18px;
+  font-weight: bold;
+  color: orange;
 }
 
 button {
@@ -391,20 +459,19 @@ label {
   cursor: pointer;
 }
 
-input,
-select {
+.error-message {
+  color: orange;
+  font-size: 14px;
+  margin-top: 5px;
+}
+
+input {
   width: 100%;
   padding: 12px;
   border: 1px solid antiquewhite;
   border-radius: 5px;
   background: white;
   box-sizing: border-box;
-}
-
-form {
-  display: flex;
-  flex-direction: column;
-  align-items: stretch;
 }
 
 .dropdown {
