@@ -179,7 +179,14 @@
           <div class="offer-details">
             <p>Parcelas</p>
             <strong>
-              <p>{{ offer.installments }}x R$ {{ offer.installmentAmount }}</p>
+              <p>
+                {{ offer.installments }}x R$
+                {{
+                  parseFloat(offer.installmentAmount)
+                    .toFixed(2)
+                    .replace(".", ",")
+                }}
+              </p>
             </strong>
           </div>
           <div class="offer-details">

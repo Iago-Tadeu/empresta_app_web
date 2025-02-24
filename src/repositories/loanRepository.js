@@ -2,7 +2,7 @@ import axios from "axios";
 import loanAdapter from "@/core/adapters/loanAdapter";
 import { Institution, Agreement } from "@/domain/models/loanModel";
 
-const BASE_API_URL = "http://127.0.0.1:8000/api";
+const BASE_API_URL = "http://192.168.0.33:8000/api";
 
 const api = axios.create({
   baseURL: BASE_API_URL,
